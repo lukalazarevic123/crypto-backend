@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Server = void 0;
 const express_1 = __importDefault(require("express"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const http = __importStar(require("http"));
 const body_parser_1 = require("body-parser");
 const app_routing_1 = require("./router/app-routing");
@@ -42,7 +43,7 @@ class Server {
     configure() {
         this.configureMiddleware();
         this.configureRoutes();
-        // this.configureDb();
+        this.configureDb();
     }
     configureMiddleware() {
         this.app.use((0, body_parser_1.json)({ limit: "50mb" }));
@@ -51,19 +52,17 @@ class Server {
     configureRoutes() {
         const basePath = "/";
         this.app.use(basePath, this.router);
-        if (process.env.NODE_ENV == "production") {
-            this.app.use(express_1.default.static(path.join(__dirname, '/../client/build')));
-        }
         new app_routing_1.AppRouting(this.router);
     }
-    // private configureDb() {
-    //     const db_url = process.env.DB_URL;
-    //     mongoose.connect(db_url);
-    //     const conn = mongoose.connection;
-    //     conn.once('open', () => {
-    //         console.log("Database connection established successfully.");
-    //     })
-    // }
+    configureDb() {
+        var _a;
+        const db_url = (_a = process.env.DB_URL) !== null && _a !== void 0 ? _a : "";
+        mongoose_1.default.connect(db_url);
+        const conn = mongoose_1.default.connection;
+        conn.once('open', () => {
+            console.log("Database connection established successfully.");
+        });
+    }
     run() {
         const port = process.env.PORT || 4000;
         const server = http.createServer(this.app);

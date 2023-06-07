@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import * as http from "http";
 import { json, urlencoded } from "body-parser";
 import { AppRouting } from './router/app-routing';
@@ -18,6 +19,7 @@ export class Server {
     private configure() {
         this.configureMiddleware();
         this.configureRoutes();
+        this.configureDb();
     }
 
     private configureMiddleware() {
@@ -28,10 +30,17 @@ export class Server {
     private configureRoutes() {
         const basePath = "/";
         this.app.use(basePath, this.router);
-        if (process.env.NODE_ENV == "production") {
-            this.app.use(express.static(path.join(__dirname, '/../client/build')));
-        }
+
         new AppRouting(this.router);
+    }
+
+    private configureDb() {
+        const db_url = process.env.DB_URL ?? "";
+        mongoose.connect(db_url);
+        const conn = mongoose.connection;
+        conn.once('open',()=>{
+            console.log("Database connection established successfully.");
+        })
     }
 
     public run() {
